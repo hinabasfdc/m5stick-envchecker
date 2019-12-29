@@ -5,10 +5,15 @@ import wifiCfg
 import socket
 import network
 import hat
+import urequests
+import json
+
+NTPSERVER = 'http://ntp-b1.nict.go.jp/cgi-bin/time'
+MONTHCONVERTTABLE = '{"Jan": "1","Feb": "2","Mar": "3","Apr": "4","May": "5","Jun": "6","Jul": "7","Aug": "8","Sep": "9","Oct": "10","Nov": "11","Dec": "12"}'
 
 lcd.setRotation(1)
 setScreenColor(0x000000)
-axp.setLcdBrightness(25)
+axp.setLcdBrightness(40)
 
 wifiCfg.screenShow()
 wifiCfg.autoConnect(lcdShow = True)
@@ -25,6 +30,29 @@ lcd.clear()
 lcd.print('Listening on...', 0, 0, 0xFFFFFF)
 lcd.print('\n' + (networkinfo))
 
+def setRTCbyNTP():
+  req = urequests.request(method='GET', url=NTPSERVER, headers={})
+  lcd.print(req.status_code, 0, 24, 0xffffff)
+  if req.status_code == 200:
+    lcd.print('NTP Server request: SUCCESS', 0, 36, 0xFFFFFF)
+
+    arrayRecievedYMD = req.text.split(' ')
+    arrayRecievedHMS = arrayRecievedYMD[3].split(':')
+    j = json.loads(MONTHCONVERTTABLE)
+
+    year = arrayRecievedYMD[4]
+    month = j[arrayRecievedYMD[1]]
+    date = arrayRecievedYMD[2]
+    hour = arrayRecievedHMS[0]
+    minute = arrayRecievedHMS[1]
+    second = arrayRecievedHMS[2]
+    lcd.print(year + month + date + hour + minute + second, 0, 48, 0xFFFFFF)
+    
+    rtc.setTime(int(year), int(month), int(date), int(hour), int(minute), int(second))
+
+  else:
+    lcd.print('NTP Server Request: Error: %s' % req.status_code)
+    
 def getDatetimeISOFormat():
   year = str((rtc.now()[0]))
   month = str('%02d' % (rtc.now()[1]))
@@ -32,7 +60,7 @@ def getDatetimeISOFormat():
   hour = str('%02d' % (rtc.now()[3]))
   minute = str('%02d' % (rtc.now()[4]))
   second = str('%02d' % (rtc.now()[5]))
-  isoformat = year + '-' + month + '-' + date + 'T' + hour + ':' + minute + ':' + second + '+09:00'
+  isoformat = year + '-' + month + '-' + date + 'T' + hour + ':' + minute + ':' + second
   return isoformat
 
 def getJsonEnvData():
@@ -56,6 +84,8 @@ def buttonB_wasPressed():
   lcd.print(captureddatetime)
 
 btnB.wasPressed(buttonB_wasPressed)
+
+setRTCbyNTP()
 
 try:
   while True:
