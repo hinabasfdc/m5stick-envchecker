@@ -4,9 +4,10 @@ from uiflow import *
 import wifiCfg
 import socket
 import network
-import hat
+#import hat
 import urequests
 import json
+import unit
 
 NTPSERVER = 'http://ntp-b1.nict.go.jp/cgi-bin/time'
 MONTHCONVERTTABLE = '{"Jan": "1","Feb": "2","Mar": "3","Apr": "4","May": "5","Jun": "6","Jul": "7","Aug": "8","Sep": "9","Oct": "10","Nov": "11","Dec": "12"}'
@@ -18,7 +19,8 @@ axp.setLcdBrightness(40)
 wifiCfg.screenShow()
 wifiCfg.autoConnect(lcdShow = True)
 
-hat_env0 = hat.get(hat.ENV)
+env0 = unit.get(unit.ENV, unit.PORTA)
+#hat_env0 = hat.get(hat.ENV)
 wlan = network.WLAN(network.STA_IF)
 networkinfo = str(wlan.ifconfig()[0])
 
@@ -64,17 +66,17 @@ def getDatetimeISOFormat():
   return isoformat
 
 def getJsonEnvData():
-  temperature = ('%.1f' % (hat_env0.temperature))
-  humidity = ('%.1f' % (hat_env0.humidity))
-  pressure = ('%.1f' % (hat_env0.pressure))
+  temperature = ('%.1f' % (env0.temperature))
+  humidity = ('%.1f' % (env0.humidity))
+  pressure = ('%.1f' % (env0.pressure))
   captureddatetime = getDatetimeISOFormat()
   ret = '{"temperature":{"value":%s,"type":"Float"},"humidity":{"value":%s,"type":"Float"},"pressure":{"value":%s,"type":"Float"},"captureddatetime":{"value":"%s","type":"Datetime"}}' % (temperature,humidity,pressure,captureddatetime)
   return ret
 
 def buttonB_wasPressed():
-  temperature = ('%.1f' % (hat_env0.temperature))
-  humidity = ('%.1f' % (hat_env0.humidity))
-  pressure = ('%.1f' % (hat_env0.pressure))
+  temperature = ('%.1f' % (env0.temperature))
+  humidity = ('%.1f' % (env0.humidity))
+  pressure = ('%.1f' % (env0.pressure))
   captureddatetime = getDatetimeISOFormat()
 
   lcd.clear()
